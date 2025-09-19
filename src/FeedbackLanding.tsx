@@ -141,7 +141,7 @@ export default function FeedbackLanding({
     }
   };
 
-  const MIN_REVIEW = 20;
+  const MIN_REVIEW = 1;
   const MAX_REVIEW = 500;
 
   const handleSendLowRating = async () => {
@@ -347,7 +347,7 @@ export default function FeedbackLanding({
                 Расскажите, что именно можно улучшить — это поможет нам стать лучше.
               </p>
               <div className="flex items-center justify-between mb-1 text-xs text-gray-500">
-                <span>Минимум {MIN_REVIEW} символов</span>
+                <span>✍️</span>
                 <span>
                   {review.length}/{MAX_REVIEW}
                 </span>
@@ -421,36 +421,37 @@ export default function FeedbackLanding({
 
       {/* HIGH-RATING MODAL (4–5⭐) BEFORE REDIRECT — single CTA */}
       <AnimatePresence>
-        {highModalOpen && (
-          <motion.div
-            className="fixed inset-0 z-[55] flex items-center justify-center bg-black/50 px-4"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
+          {highModalOpen && (
             <motion.div
-              role="dialog"
-              aria-modal="true"
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              transition={{ type: "spring", stiffness: 260, damping: 20 }}
-              className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-6 text-center"
+              className="fixed inset-0 z-[55] flex items-center justify-center bg-black/50 px-4"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
             >
-              <h3 className="text-lg font-semibold mb-2">✨ Отлично!</h3>
-              <p className="text-sm text-gray-700 mb-6">
-                Добавили вас в базу. Покажите свой отзыв официанту, чтобы подтвердить участие в конкурсе. 🎉📱
-              </p>
-              <button
-                type="button"
-                onClick={goTo2Gis}
-                className="w-full rounded-2xl bg-amber-500 hover:bg-amber-600 text-white font-semibold py-2.5"
+              <motion.div
+                role="dialog"
+                aria-modal="true"
+                initial={{ scale: 0.95, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.95, opacity: 0 }}
+                transition={{ type: "spring", stiffness: 260, damping: 20 }}
+                className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-6 text-center"
               >
-                Оставить отзыв
-              </button>
+                <h3 className="text-lg font-semibold mb-2">🚀 Остался последний шаг!</h3>
+                <p className="text-sm text-gray-700 mb-6">
+                  1. Оставь свой положительный отзыв в 2ГИС ⭐ <br />
+                  2. Подтверди свое участие в розыгрыше призов - покажи свой отзыв официанту 🎁
+                </p>
+                <button
+                  type="button"
+                  onClick={goTo2Gis}
+                  className="w-full rounded-2xl bg-amber-500 hover:bg-amber-600 text-white font-semibold py-2.5"
+                >
+                  Перейти в 2ГИС
+                </button>
+              </motion.div>
             </motion.div>
-          </motion.div>
-        )}
+          )}
       </AnimatePresence>
 
       {/* FOOTER */}
