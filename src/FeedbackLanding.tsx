@@ -69,19 +69,19 @@ export default function FeedbackLanding({
   const [stars, setStars] = useState(0);
   const [hoverStars, setHoverStars] = useState(0);
   const [review, setReview] = useState("");
-  const [showModal, setShowModal] = useState(false);
+  const [showModal, setShowModal] = useState(false); // low-rating modal
   const [touched, setTouched] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [botTrap, setBotTrap] = useState(""); // honeypot
 
-  // Styled success modal (for 1–3⭐ flow)
+  // SUCCESS MODAL after low-rating submit
   const [successOpen, setSuccessOpen] = useState(false);
   const [successMsg, setSuccessMsg] = useState(
     "Спасибо! Мы получили ваш отзыв и уже работаем над улучшениями ❤️"
   );
 
-  // NEW: toast for high rating (4–5⭐)
-  const [highToastOpen, setHighToastOpen] = useState(false);
+  // modal for high rating before redirect (single CTA)
+  const [highModalOpen, setHighModalOpen] = useState(false);
 
   const ratingRef = useRef<HTMLDivElement | null>(null);
 
@@ -100,16 +100,20 @@ export default function FeedbackLanding({
     localStorage.setItem("fb_name_phone", JSON.stringify({ n: name, p: phone }));
   }, [name, phone]);
 
-  // Auto-close success modal (optional)
-  useEffect(() => {
-    if (!successOpen) return;
-    const id = setTimeout(() => setSuccessOpen(false), 2200);
-    return () => clearTimeout(id);
-  }, [successOpen]);
-
   const phoneDigits = useMemo(() => digitsOnly(phone), [phone]);
   const isValidPhone = phoneDigits.length === 11 && phoneDigits.startsWith("7");
   const isValid = name.trim().length > 1 && isValidPhone && stars > 0;
+
+  const resetForm = () => {
+    setName("");
+    setPhone("+7 ");
+    setStars(0);
+    setHoverStars(0);
+    setReview("");
+    setTouched(false);
+    // очищаем локальный кеш, чтобы новая сессия была пустая
+    localStorage.removeItem("fb_name_phone");
+  };
 
   const handleSelectStars = (value: number) => setStars(value);
 
@@ -121,7 +125,7 @@ export default function FeedbackLanding({
     if (stars <= 3) {
       setShowModal(true);
     } else {
-      // Log positive rating before redirect
+      // Always log to sheet for 4–5⭐
       logToGoogleSheet({
         type: "high_rating",
         name: name.trim(),
@@ -132,9 +136,8 @@ export default function FeedbackLanding({
         userAgent: navigator.userAgent,
         referer: location.href,
       });
-      // Show helpful toast on the original tab
-      setHighToastOpen(true);
-      window.open(twoGisUrl, "_blank", "noopener,noreferrer");
+      // Show modal with single CTA (no auto-redirect)
+      setHighModalOpen(true);
     }
   };
 
@@ -169,6 +172,8 @@ export default function FeedbackLanding({
       setReview("");
       setSuccessMsg("Спасибо! Мы получили ваш отзыв и уже работаем над улучшениями ❤️");
       setSuccessOpen(true);
+      // clear form after successful send
+      resetForm();
     } catch (e) {
       console.error(e);
       setSuccessMsg("Упс! Не получилось отправить. Попробуйте ещё раз.");
@@ -176,6 +181,13 @@ export default function FeedbackLanding({
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const goTo2Gis = () => {
+    // Open 2GIS in a new tab and clear form
+    window.open(twoGisUrl, "_blank", "noopener,noreferrer");
+    setHighModalOpen(false);
+    resetForm();
   };
 
   // Keyboard support for rating
@@ -407,29 +419,36 @@ export default function FeedbackLanding({
         )}
       </AnimatePresence>
 
-      {/* HIGH-RATING TOAST (4–5⭐) */}
+      {/* HIGH-RATING MODAL (4–5⭐) BEFORE REDIRECT — single CTA */}
       <AnimatePresence>
-        {highToastOpen && (
+        {highModalOpen && (
           <motion.div
-            className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[55] px-4"
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 16 }}
+            className="fixed inset-0 z-[55] flex items-center justify-center bg-black/50 px-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
           >
-            <div className="w-[92vw] max-w-xl rounded-2xl bg-emerald-600 text-white shadow-lg px-4 py-3 flex items-start gap-3">
-              <span className="text-2xl">✨</span>
-              <div className="text-sm leading-snug pr-2">
-                <b>Отлично!</b> Добавили вас в базу. <br />
-                Покажите свой отзыв официанту, чтобы подтвердить участие в конкурсе. 🎉📱
-              </div>
+            <motion.div
+              role="dialog"
+              aria-modal="true"
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 260, damping: 20 }}
+              className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-6 text-center"
+            >
+              <h3 className="text-lg font-semibold mb-2">✨ Отлично!</h3>
+              <p className="text-sm text-gray-700 mb-6">
+                Добавили вас в базу. Покажите свой отзыв официанту, чтобы подтвердить участие в конкурсе. 🎉📱
+              </p>
               <button
-                aria-label="Закрыть уведомление"
-                onClick={() => setHighToastOpen(false)}
-                className="ml-auto -mr-1 h-6 w-6 rounded-full bg-white/15 hover:bg-white/25 flex items-center justify-center"
+                type="button"
+                onClick={goTo2Gis}
+                className="w-full rounded-2xl bg-amber-500 hover:bg-amber-600 text-white font-semibold py-2.5"
               >
-                ×
+                Оставить отзыв
               </button>
-            </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
